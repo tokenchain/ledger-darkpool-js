@@ -37,10 +37,10 @@ import {
   SignResponse,
 } from "./types";
 
-const APP_NAME_TERRA = "Terra";
+const APP_NAME_DP = "dpChain";
 const APP_NAME_COSMOS = "Cosmos";
 
-export default class TerraApp {
+export default class DarkpoolApp {
   private transport;
   private info: AppInfoResponse;
   private version: VersionResponse;
@@ -83,7 +83,7 @@ export default class TerraApp {
       }
 
       if (
-        (this.info.app_name === APP_NAME_TERRA && this.version.major === 1) ||
+        (this.info.app_name === APP_NAME_DP && this.version.major === 1) ||
         (this.info.app_name === APP_NAME_COSMOS && this.version.major === 2)
       ) {
         return null;
@@ -125,7 +125,7 @@ export default class TerraApp {
 
   getPublicKey(path): Promise<PublicKeyResponse> {
     const result = serializePath(path);
-    const data = Buffer.concat([TerraApp.serializeHRP("terra"), result]);
+    const data = Buffer.concat([TerraApp.serializeHRP("dx0"), result]);
     return publicKey(this.transport, data);
   }
 

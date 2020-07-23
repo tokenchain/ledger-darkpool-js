@@ -1,14 +1,14 @@
 import * as crypto from "crypto";
 import * as secp256k1 from "secp256k1/elliptic";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
-import TerraApp, { PublicKeyResponse, AddressResponse, SignResponse  } from "../src";
+import DarkpoolApp, { PublicKeyResponse, AddressResponse, SignResponse  } from "../src";
 import { ERROR_CODE} from "../src/constants";
 
 const debug = require("debug")("ledger-terra-js");
 
-const TERRA_ADDRESS = "terra1rpml0hh6kc8g6at2lsatzkd550yc2ngnsachtt";
+const DP_ADDRESS = "dx01rpml0hh6kc8g6at2lsatzkd550yc2ngnsachtt";
 const TERRA_HEX_PUBLIC_KEY = "03028f0d5a9fd41600191cdefdea05e77a68dfbce286241c0190805b9346667d07";
-// const TERRA_ADDRESS = "terra1lnl5tm84drx69qtygrj40steyvyk5emngeclcc";
+// const DP_ADDRESS = "terra1lnl5tm84drx69qtygrj40steyvyk5emngeclcc";
 // const TERRA_HEX_PUBLIC_KEY = "03ad97b6e920dda87454196c7899ed0bfd0a958b6f45a7235e6bde7359f04f0be1";
 
 async function testSign(path: number[], message: string) {
@@ -38,11 +38,11 @@ async function testSign(path: number[], message: string) {
 jest.setTimeout(60000);
 
 let transport;
-let app: TerraApp;
+let app: DarkpoolApp;
 
 beforeAll(async (done) => {
   transport = await TransportNodeHid.create(1000);
-  app = new TerraApp(transport);
+  app = new DarkpoolApp(transport);
   await app.initialize();
   done();
 });
@@ -83,7 +83,7 @@ test("getAddressAndPubKey", async () => {
 
   // Derivation path. First 3 items are automatically hardened!
   const path = [44, 330, 5, 0, 3];
-  const resp = (await app.getAddressAndPubKey(path, "terra")) as AddressResponse;
+  const resp = (await app.getAddressAndPubKey(path, "dx0")) as AddressResponse;
 
   debug("getAddressAndPubKey", resp);
 
@@ -93,7 +93,7 @@ test("getAddressAndPubKey", async () => {
   expect(resp).toHaveProperty("bech32_address");
   expect(resp).toHaveProperty("compressed_pk");
 
-  expect(resp.bech32_address).toEqual(TERRA_ADDRESS);
+  expect(resp.bech32_address).toEqual(DP_ADDRESS);
   const pkBuffer = Buffer.from(resp.compressed_pk);
   expect(pkBuffer.length).toEqual(33);
 });
@@ -103,7 +103,7 @@ test("show address and public key", async () => {
 
   // Derivation path. First 3 items are automatically hardened!
   const path = [44, 330, 5, 0, 3];
-  const resp = (await app.showAddressAndPubKey(path, "terra")) as AddressResponse;
+  const resp = (await app.showAddressAndPubKey(path, "dx0")) as AddressResponse;
 
   debug("showAddressAndPubKey", resp);
 
@@ -113,7 +113,7 @@ test("show address and public key", async () => {
   expect(resp).toHaveProperty("bech32_address");
   expect(resp).toHaveProperty("compressed_pk");
 
-  expect(resp.bech32_address).toEqual(TERRA_ADDRESS);
+  expect(resp.bech32_address).toEqual(DP_ADDRESS);
   const pkBuffer = Buffer.from(resp.compressed_pk);
   expect(pkBuffer.length).toEqual(33);
 });
@@ -178,29 +178,29 @@ test("sign withdraw", async () => {
       {
         type: "distribution/MsgWithdrawDelegationReward",
         value: {
-          delegator_address: "terra1kky4yzth6gdrm8ga5zlfwhav33yr7hl8ck7clh",
-          validator_address: "terravaloper1kn3wugetjuy4zetlq6wadchfhvu3x7407xc2yx",
+          delegator_address: "dx01kky4yzth6gdrm8ga5zlfwhav33yr7hl8ck7clh",
+          validator_address: "dx0valoper1kn3wugetjuy4zetlq6wadchfhvu3x7407xc2yx",
         },
       },
       {
         type: "distribution/MsgWithdrawDelegationReward",
         value: {
-          delegator_address: "terra1kky4yzth6gdrm8ga5zlfwhav33yr7hl8ck7clh",
-          validator_address: "terravaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9ufq6mv0",
+          delegator_address: "dx01kky4yzth6gdrm8ga5zlfwhav33yr7hl8ck7clh",
+          validator_address: "dx0valoper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9ufq6mv0",
         },
       },
       {
         type: "distribution/MsgWithdrawDelegationReward",
         value: {
-          delegator_address: "terra1kky4yzth6gdrm8ga5zlfwhav33yr7hl8ck7clh",
-          validator_address: "terravaloper1ey69r37gfxvxg62sh4r0ktpuc46pzjrmypn488",
+          delegator_address: "dx01kky4yzth6gdrm8ga5zlfwhav33yr7hl8ck7clh",
+          validator_address: "dx0valoper1ey69r37gfxvxg62sh4r0ktpuc46pzjrmypn488",
         },
       },
       {
         type: "distribution/MsgWithdrawDelegationReward",
         value: {
-          delegator_address: "terra1kky4yzth6gdrm8ga5zlfwhav33yr7hl8ck7clh",
-          validator_address: "terravaloper1648ynlpdw7fqa2axt0w2yp3fk542junlaujy76",
+          delegator_address: "dx01kky4yzth6gdrm8ga5zlfwhav33yr7hl8ck7clh",
+          validator_address: "dx0valoper1648ynlpdw7fqa2axt0w2yp3fk542junlaujy76",
         },
       },
     ],
@@ -218,38 +218,38 @@ test("sign big tx", async () => {
     '{"account_number":"108","chain_id":"columbus-3",' +
     '"fee":{"amount":[{"amount":"600","denom":"uluna"}],"gas":"200000"},"memo":"",' +
     '"msgs":[{"type":"distribution/MsgWithdrawDelegationReward","value":' +
-    '{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper1qwl879nx9t6kef4supyazayf7vjhennyh568ys"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper1x88j7vp2xnw3zec8ur3g4waxycyz7m0mahdv3p"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03x2mfyu7"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper1ttfytaf43nkytzp8hkfjfgjc693ky4t3y2n2ku"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper1wdrypwex63geqswmcy5qynv4w3z3dyef2qmyna"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper102ruvpv2srmunfffxavttxnhezln6fnc54at8c"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper1sxx9mszve0gaedz5ld7qdkjkfv8z992ax69k08"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper1ssm0d433seakyak8kcf93yefhknjleeds4y3em"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper13sduv92y3xdhy3rpmhakrc3v7t37e7ps9l0kpv"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper15urq2dtp9qce4fyc85m6upwm9xul3049e02707"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper14kn0kk33szpwus9nh8n87fjel8djx0y070ymmj"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper1k9a0cs97vul8w2vwknlfmpez6prv8klv03lv3d"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper1kj0h4kn4z5xvedu2nd9c4a9a559wvpuvu0h6qn"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
-    '"value":{"delegator_address":"terra14lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
-    '"terravaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpfdn6m9d"}}],"sequence":"106"}';
+    '{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper1qwl879nx9t6kef4supyazayf7vjhennyh568ys"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper1x88j7vp2xnw3zec8ur3g4waxycyz7m0mahdv3p"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper1grgelyng2v6v3t8z87wu3sxgt9m5s03x2mfyu7"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper1ttfytaf43nkytzp8hkfjfgjc693ky4t3y2n2ku"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper1wdrypwex63geqswmcy5qynv4w3z3dyef2qmyna"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper102ruvpv2srmunfffxavttxnhezln6fnc54at8c"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper10e4vsut6suau8tk9m6dnrm0slgd6npe3jx5xpv"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper1sxx9mszve0gaedz5ld7qdkjkfv8z992ax69k08"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper1ssm0d433seakyak8kcf93yefhknjleeds4y3em"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper13sduv92y3xdhy3rpmhakrc3v7t37e7ps9l0kpv"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper15urq2dtp9qce4fyc85m6upwm9xul3049e02707"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper14kn0kk33szpwus9nh8n87fjel8djx0y070ymmj"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper1k9a0cs97vul8w2vwknlfmpez6prv8klv03lv3d"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper1kj0h4kn4z5xvedu2nd9c4a9a559wvpuvu0h6qn"}},{"type":"distribution/MsgWithdrawDelegationReward",' +
+    '"value":{"delegator_address":"dx014lultfckehtszvzw4ehu0apvsr77afvyhgqhwh","validator_address":' +
+    '"dx0valoper1hjct6q7npsspsg3dgvzk3sdf89spmlpfdn6m9d"}}],"sequence":"106"}';
 
   const responsePk = await app.getPublicKey(path);
   const responseSign = await app.sign(path, message);
