@@ -220,19 +220,15 @@ export class GeneratorBuilder {
         return this
     }
 
-    buildWithCustomSeed(seed32: Buffer): DidDP {
-        return null
-    }
-
     recover(m: string): DidDP {
 
         const {publicKeyBytes, privateKeyBytes} = GeneratorBuilder.derivePrivateKeys(this.memory.mem)
-        const {keyPairPublicKey, keyPairPrivateKey} = GeneratorBuilder.derivePrivateKeys(this.memory.mem)
+        const {keyPairPublicKey, keyPairPrivateKey} = GeneratorBuilder.derivePrivateKeys(privateKeyBytes)
 
         let secret_doc: DidSecret = {
             seed: this.memory.seed.slice(0, 32).toString("hex"),
             signKey: base58Encode(privateKeyBytes.slice(0, 32)),
-            encryptionPrivateKey: base58Encode(keyPairPublicKey)
+            encryptionPrivateKey: base58Encode(keyPairPrivateKey)
         }
 
         let doc_dp: DidDP = {
