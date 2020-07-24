@@ -1,4 +1,4 @@
-## Math Wallet QRCode 文档
+## DXP Wallet QRCode 文档
 
 转账
 ~~~
@@ -7,9 +7,9 @@
     "type": "EOS",
     "action": "transfer",
     "data": {
-        "to": "bigbigbigbig",
-        "amount": "1.0000 EOS",
-        "precision": 4,
+        "to": "dx013992039023....",
+        "amount": "10000 mdap",
+        "precision": 3,
         "contract": "eosio.token",
         "memo":"memo"
     }

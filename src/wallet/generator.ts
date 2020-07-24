@@ -1,12 +1,19 @@
-import {xor} from "./util"
+import {xor, padPrivKey, hex3Buffer} from "./util"
 import {sha2} from "./hash"
+import bip39 from "bip39"
+import secp256k1 from "secp256k1"
+import {derivePath, getMasterKeyFromSeed, getPublicKey} from "ed25519-hd-key"
+import {HDNode} from "hdnode-js"
+import Cosmos from "./cosmos"
+import Bitcoin from "./bitcoin"
+import Ethereum from "./eth"
+import Darkpool from "./darkpool"
 
 const entropySalt = 'xioaio2nxxoiisjfiji93902..3232'
 
 export class GeneratorBuilder {
 
     constructor() {
-
     }
 
     static generateMnemonic() {
@@ -22,6 +29,25 @@ export class GeneratorBuilder {
         mnemonic = bip39.entropyToMnemonic(entropyHex)
         // console.log("after", entropyBuf, mnemonic)
         return mnemonic
+    }
+
+    static derivePublicKeys(priv) {
+        // bitcoin and cosmos use compressed pubkey of 33 bytes.
+        // ethereum uses uncompressed 64-byte pubkey without the openssl prefix (0x04).
+        let bitcoin = secp256k1.publicKeyCreate(priv.bitcoin, true)
+        let cosmos = secp256k1.publicKeyCreate(priv.cosmos, true)
+        let ethereum = secp256k1.publicKeyCreate(priv.ethereum, false).slice(-64)
+        let darkpool = getPublicKey(priv.darkpool, true)
+        return {cosmos, bitcoin, ethereum, darkpool}
+    }
+
+    // cosmos and eth are 0x hex, bitcoin is base58check
+    static deriveAddresses(pub) {
+        let cosmos = Cosmos.getAddress(pub.cosmos)
+        let bitcoin = Bitcoin.getAddress(pub.bitcoin)
+        let ethereum = Ethereum.getAddress(pub.ethereum)
+        let darkpool = Darkpool.getAddress(pub.darkpool)
+        return {cosmos, bitcoin, ethereum, darkpool}
     }
 
     static splitMnemonic(mnemonic) {
@@ -48,13 +74,13 @@ export class GeneratorBuilder {
     }
 
     static deriveWallet(mnemonic) {
-        let privateKeys = derivePrivateKeys(mnemonic)
-        let publicKeys = derivePublicKeys(privateKeys)
-        let addresses = deriveAddresses(publicKeys)
+        let privateKeys = GeneratorBuilder.derivePrivateKeys(mnemonic)
+        let publicKeys = GeneratorBuilder.derivePublicKeys(privateKeys)
+        let addresses = GeneratorBuilder.deriveAddresses(publicKeys)
         return {privateKeys, publicKeys, addresses}
     }
 
-    static deriveMasterKey(mnemonic) {
+    static deriveMasterKey(mnemonic): HDNode {
         // seed must be 12 or more space-separated words
         var words = mnemonic.trim().split(/\s+/g)
         if (words.length < 12) {
@@ -63,78 +89,52 @@ export class GeneratorBuilder {
 
         // throws if mnemonic is invalid
         bip39.mnemonicToEntropy(mnemonic)
-
         var seed = bip39.mnemonicToSeed(mnemonic)
-        var masterKey = HDNode.fromSeedBuffer(seed)
+        let hex_seed = seed.toString('hex')
+        var masterKey = HDNode.fromMasterSeed(hex_seed)
         return masterKey
     }
 
     static derivePrivateKeys(mnemonic) {
-        var masterKey = deriveMasterKey(mnemonic)
-
+        let masterKey = GeneratorBuilder.deriveMasterKey(mnemonic)
         // bip32 derived wallet: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
         // single quote == hardened derivation
         // derivation path: m/purpose/cointype/account/...
         // purpose: the BIP which sets the spec: https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
         //  see motivation: https://github.com/bitcoin/bips/blob/master/bip-0043.mediawiki
-        // cointype: not clear where source of truth is but
+        //  cointype: not clear where source of truth is but
         //   btc = 0
         //   eth = 60
         //   dfn = 223
-        //   atom = 118 (?) // TODO
-        var hdPathAtom = "m/44'/118'/0'/0/0" // key controlling ATOM allocation
-        var hdPathETHIntermediate = "m/44'/60'/0'/0/0" // ETH key for emergency return address
-        var hdPathBTCIntermediate = "m/44'/0'/0'/0/0" // BTC key forwarding donation for hdPathAtom key
-
-        var cosmosHD = masterKey.derivePath(hdPathAtom)
-        var ethereumHD = masterKey.derivePath(hdPathETHIntermediate)
-        var bitcoinHD = masterKey.derivePath(hdPathBTCIntermediate)
-
+        //   atom = 118 (?)
+        //   dap = 777 (?)
+        let hdPathAtom = "m/44'/118'/0'/0/0" // key controlling ATOM allocation
+        let hdPathETHIntermediate = "m/44'/60'/0'/0/0" // ETH key for emergency return address
+        let hdPathBTCIntermediate = "m/44'/0'/0'/0/0" // BTC key forwarding donation for hdPathAtom key
+        let hdPathDAP = "m/44'/777'/0'/0/0" // DAP key forwarding donation for hdPathAtom key
+        let cosmosHD = masterKey.derivePath(hdPathAtom)
+        let darkpoolHD = masterKey.derivePath(hdPathDAP)
+        let ethereumHD = masterKey.derivePath(hdPathETHIntermediate)
+        let bitcoinHD = masterKey.derivePath(hdPathBTCIntermediate)
         // NOTE: we want to make sure private keys are always 32 bytes
         // else we may have trouble. See the bitcore fiasco for more:
         // https://github.com/bitpay/bitcore-lib/issues/47
         // https://github.com/bitpay/bitcore-lib/pull/97
-        var cosmos = padPrivKey(cosmosHD.keyPair.d.toBuffer())
-        var bitcoin = padPrivKey(bitcoinHD.keyPair.d.toBuffer())
-        var ethereum = padPrivKey(ethereumHD.keyPair.d.toBuffer())
-
-        return {cosmos, bitcoin, ethereum}
-    }
-
-    static derivePublicKeys(priv) {
-        // bitcoin and cosmos use compressed pubkey of 33 bytes.
-        // ethereum uses uncompressed 64-byte pubkey without the openssl prefix (0x04).
-        let bitcoin = secp256k1.publicKeyCreate(priv.bitcoin, true)
-        let cosmos = secp256k1.publicKeyCreate(priv.cosmos, true)
-        let ethereum = secp256k1.publicKeyCreate(priv.ethereum, false).slice(-64)
-        return {cosmos, bitcoin, ethereum}
-    }
-
-// cosmos and eth are 0x hex, bitcoin is base58check
-    static deriveAddresses(pub) {
-        let cosmos = Cosmos.getAddress(pub.cosmos)
-        let bitcoin = Bitcoin.getAddress(pub.bitcoin)
-        let ethereum = Ethereum.getAddress(pub.ethereum)
-        return {cosmos, bitcoin, ethereum}
-    }
-
-    module
-.
-    exports = {
-        generateMnemonic,
-        splitMnemonic,
-        joinMnemonic,
-        deriveWallet
+        let cosmos = padPrivKey(hex3Buffer(cosmosHD.privateKey()))
+        let bitcoin = padPrivKey(hex3Buffer(bitcoinHD.privateKey()))
+        let ethereum = padPrivKey(hex3Buffer(ethereumHD.privateKey()))
+        let darkpool = hex3Buffer(darkpoolHD.privateKey())
+        return {cosmos, bitcoin, ethereum, darkpool}
     }
 
     /*
     // test
-    var list = []
-    var N = 200
+    let list = []
+    let N = 200
     for (let i = 0; i < N; i++){
-      var mnemonic = generateMnemonic()
-      var w = deriveWallet(mnemonic)
-      var obj = {
+      let mnemonic = generateMnemonic()
+      let w = deriveWallet(mnemonic)
+      let obj = {
         mnemonic: mnemonic,
         master: padPrivKey(deriveMasterKey(mnemonic).keyPair.d.toBuffer()).toString('hex'),
         seed: bip39.mnemonicToSeed(mnemonic).toString('hex'),
@@ -148,9 +148,9 @@ export class GeneratorBuilder {
     */
 
     /*
-    var seed = generateSeed()
-    var w = deriveWallet(seed)
-    var obj = {
+    let seed = generateSeed()
+    let w = deriveWallet(seed)
+    let obj = {
       seed: seed,
       privateKeys: {
         cosmos: w.privateKeys.cosmos.toString('hex'),
@@ -170,11 +170,6 @@ export class GeneratorBuilder {
     }
     console.log(obj)
     */
-
-    static padPrivKey(privB) {
-        var privHex = privB.toString('hex')
-        return Buffer(('0000000000000000' + privHex).slice(-64), 'hex')
-    }
 
 
 }

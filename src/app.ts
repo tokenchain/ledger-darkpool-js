@@ -125,19 +125,19 @@ export default class DarkpoolApp {
 
   getPublicKey(path): Promise<PublicKeyResponse> {
     const result = serializePath(path);
-    const data = Buffer.concat([TerraApp.serializeHRP("dx0"), result]);
+    const data = Buffer.concat([DarkpoolApp.serializeHRP("dx0"), result]);
     return publicKey(this.transport, data);
   }
 
   getAddressAndPubKey(path, hrp): Promise<PublicKeyResponse> {
     const result = serializePath(path);
-    const data = Buffer.concat([TerraApp.serializeHRP(hrp), result]);
+    const data = Buffer.concat([DarkpoolApp.serializeHRP(hrp), result]);
     return getAddressAndPubKey(this.transport, data);
   }
 
   showAddressAndPubKey(path, hrp): Promise<PublicKeyResponse> {
     const result = serializePath(path);
-    const data = Buffer.concat([TerraApp.serializeHRP(hrp), result]);
+    const data = Buffer.concat([DarkpoolApp.serializeHRP(hrp), result]);
     return showAddressAndPubKey(this.transport, data);
   }
 
