@@ -47,7 +47,7 @@
 import TransportWebUSB from "@ledgerhq/hw-transport-webusb";
 // eslint-disable-next-line import/no-extraneous-dependencies
 import TransportU2F from "@ledgerhq/hw-transport-u2f";
-import TerraApp from "../../src";
+import DarkpoolApp from "../../src";
 import { ERROR_CODE } from "../../src/constants";
 
 const path = [44, 330, 0, 0, 0];
@@ -100,7 +100,7 @@ export default {
 
       // Given a transport (U2F/HIF/WebUSB) it is possible instantiate the app
       const transport = await this.getTransport();
-      const app = new TerraApp(transport);
+      const app = new DarkpoolApp(transport);
       await app.initialize();
 
       // now it is possible to access all commands in the app
@@ -122,7 +122,7 @@ export default {
 
       // Given a transport (U2F/HIF/WebUSB) it is possible instantiate the app
       const transport = await this.getTransport();
-      const app = new TerraApp(transport);
+      const app = new DarkpoolApp(transport);
       await app.initialize();
 
       // now it is possible to access all commands in the app
@@ -140,7 +140,7 @@ export default {
 
       // Given a transport (U2F/HIF/WebUSB) it is possible instantiate the app
       const transport = await this.getTransport();
-      const app = new TerraApp(transport);
+      const app = new DarkpoolApp(transport);
       await app.initialize();
 
       let response = await app.getVersion();
@@ -164,7 +164,7 @@ export default {
 
       // Given a transport (U2F/HIF/WebUSB) it is possible instantiate the app
       const transport = await this.getTransport();
-      const app = new TerraApp(transport);
+      const app = new DarkpoolApp(transport);
       await app.initialize();
 
       let response = await app.getVersion();
@@ -188,7 +188,7 @@ export default {
 
       // Given a transport (U2F/HIF/WebUSB) it is possible instantiate the app
       const transport = await this.getTransport();
-      const app = new TerraApp(transport);
+      const app = new DarkpoolApp(transport);
       await app.initialize();
 
       let response = await app.getVersion();
@@ -213,7 +213,7 @@ export default {
 
       // Given a transport (U2F/HID/WebUSB) it is possible instantiate the app
       const transport = await this.getTransport();
-      const app = new TerraApp(transport);
+      const app = new DarkpoolApp(transport);
       await app.initialize();
 
       let response = await app.getVersion();

@@ -1,4 +1,4 @@
-import TerraApp from "./app";
+import DarkpoolApp from "./app";
 export * from './types';
 
-export default TerraApp;
+export default DarkpoolApp;

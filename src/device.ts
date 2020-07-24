@@ -28,7 +28,7 @@ function isDict(v): boolean {
   return typeof v === "object" && v !== null && !(v instanceof Array) && !(v instanceof Date);
 }
 
-function processErrorResponse(response: any) {
+export function processErrorResponse(response: any) {
   if (response) {
     if (isDict(response)) {
       if (Object.prototype.hasOwnProperty.call(response, "statusCode")) {
