@@ -1,4 +1,5 @@
 import createKeccakHash from "keccak"
+import base58Check from "bs58check"
 import createHash from "create-hash"
 
 export function sha3(data): Buffer {
@@ -11,4 +12,12 @@ export function sha2(data): Buffer {
 
 export function ripemd160(data): Buffer {
     return createHash('ripemd160').update(data).digest()
+}
+
+export function base58Encode(data: Buffer): string {
+    return base58Check.encode(data)
+}
+
+export function did(data: string): string {
+    return `did:dxp:${data}`
 }

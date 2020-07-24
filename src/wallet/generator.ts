@@ -1,5 +1,5 @@
 import {xor, padPrivKey, hex3Buffer} from "./util"
-import {sha2} from "./hash"
+import {sha2, did, base58Encode} from "./hash"
 import bip39 from "bip39"
 import secp256k1 from "secp256k1"
 import {derivePath, getMasterKeyFromSeed, getPublicKey} from "ed25519-hd-key"
@@ -8,13 +8,13 @@ import Cosmos from "./cosmos"
 import Bitcoin from "./bitcoin"
 import Ethereum from "./eth"
 import Darkpool from "./darkpool"
+import {DIDDoc, DidDP, DidSecret, KeyGenerator} from "../types";
+import DarkpoolApp from "../index";
 
 const entropySalt = 'xioaio2nxxoiisjfiji93902..3232'
 
 export class GeneratorBuilder {
 
-    constructor() {
-    }
 
     static generateMnemonic() {
         let mnemonic = bip39.generateMnemonic()
@@ -50,7 +50,7 @@ export class GeneratorBuilder {
         return {cosmos, bitcoin, ethereum, darkpool}
     }
 
-    static splitMnemonic(mnemonic) {
+    static splitMnemonic(mnemonic: string) {
         let eHex = bip39.mnemonicToEntropy(mnemonic)
         let eBuf = new Buffer(eHex, 'hex')
         let one = bip39.generateMnemonic()
@@ -62,7 +62,7 @@ export class GeneratorBuilder {
         return {one, two}
     }
 
-    static joinMnemonic(one, two) {
+    static joinMnemonic(one: string, two: string) {
         let oneHex = bip39.mnemonicToEntropy(one)
         let oneBuf = new Buffer(oneHex, 'hex')
         let twoHex = bip39.mnemonicToEntropy(two)
@@ -73,14 +73,14 @@ export class GeneratorBuilder {
         return mnemonic
     }
 
-    static deriveWallet(mnemonic) {
+    static deriveWallet(mnemonic: string) {
         let privateKeys = GeneratorBuilder.derivePrivateKeys(mnemonic)
         let publicKeys = GeneratorBuilder.derivePublicKeys(privateKeys)
         let addresses = GeneratorBuilder.deriveAddresses(publicKeys)
         return {privateKeys, publicKeys, addresses}
     }
 
-    static deriveMasterKey(mnemonic): HDNode {
+    static deriveMasterKey(mnemonic: string): HDNode {
         // seed must be 12 or more space-separated words
         var words = mnemonic.trim().split(/\s+/g)
         if (words.length < 12) {
@@ -95,7 +95,7 @@ export class GeneratorBuilder {
         return masterKey
     }
 
-    static derivePrivateKeys(mnemonic) {
+    static derivePrivateKeys(mnemonic: string) {
         let masterKey = GeneratorBuilder.deriveMasterKey(mnemonic)
         // bip32 derived wallet: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
         // single quote == hardened derivation
@@ -170,6 +170,87 @@ export class GeneratorBuilder {
     }
     console.log(obj)
     */
+    private memory: KeyGenerator
+
+    constructor() {
+        this.memory = {}
+    }
+
+    get MnemonicString(): string {
+        return this.memory.mem
+    }
+
+    get SeedString(): string {
+        return this.memory.seed.slice(0, 32).toString("hex")
+    }
+
+    generateDidKey() {
+
+    }
+
+    build(): DidDP {
+        if (this.memory.mem == "") {
+
+        }
+        return null
+    }
+
+    withName(nameHash: string): GeneratorBuilder {
+        this.memory.name = nameHash
+        return this
+    }
+
+    withPubKey(pk: Buffer): GeneratorBuilder {
+        this.memory.pubkey = pk
+        return this
+    }
+
+    withPrivKey(pk: Buffer): GeneratorBuilder {
+        this.memory.privkey = pk
+        return this
+    }
+
+    withMem(mnm: string): GeneratorBuilder {
+        this.memory.mem = mnm
+        return this
+    }
+
+    withSeed(seed32: Buffer): GeneratorBuilder {
+        this.memory.seed = seed32
+        return this
+    }
+
+    buildWithCustomSeed(seed32: Buffer): DidDP {
+        return null
+    }
+
+    recover(m: string): DidDP {
+
+        const {publicKeyBytes, privateKeyBytes} = GeneratorBuilder.derivePrivateKeys(this.memory.mem)
+        const {keyPairPublicKey, keyPairPrivateKey} = GeneratorBuilder.derivePrivateKeys(this.memory.mem)
+
+        let secret_doc: DidSecret = {
+            seed: this.memory.seed.slice(0, 32).toString("hex"),
+            signKey: base58Encode(privateKeyBytes.slice(0, 32)),
+            encryptionPrivateKey: base58Encode(keyPairPublicKey)
+        }
+
+        let doc_dp: DidDP = {
+            address: Darkpool.getAddress(pub),
+            pubkey: base58Encode(privateKeyBytes.slice(0, 32)),
+            name: this.memory.name,
+            algo: "ed25519"
+        }
+
+        let info: DIDDoc = {
+            did: did(base58Encode(publicKeyBytes.slice(0, 16))),
+            verifyKey: base58Encode(publicKeyBytes),
+            encryptionPublicKey: base58Encode(keyPairPublicKey),
+            secret: secret_doc,
+            dp: doc_dp
+        }
 
 
+        return info
+    }
 }

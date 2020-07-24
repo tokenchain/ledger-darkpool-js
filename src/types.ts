@@ -10,6 +10,14 @@ export interface DidSecret {
 }
 
 
+export interface KeyGenerator {
+    mem: string;
+    name: string;
+    pubkey: Buffer;
+    privkey: Buffer;
+    seed: Buffer;
+}
+
 export interface DidDP {
     address: string;
     pubkey: string;
