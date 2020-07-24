@@ -1,4 +1,6 @@
 import DarkpoolApp from "./app";
-export * from './types';
+import {GeneratorBuilder} from "./wallet/generator";
 
+export * from './types';
+export {GeneratorBuilder};
 export default DarkpoolApp;

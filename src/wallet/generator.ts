@@ -2,6 +2,7 @@ import {xor, padPrivKey, hex3Buffer} from "./util"
 import {sha2, did, base58Encode} from "./hash"
 import bip39 from "bip39"
 import secp256k1 from "secp256k1"
+import nacl from "tweetnacl"
 import {derivePath, getMasterKeyFromSeed, getPublicKey} from "ed25519-hd-key"
 import {HDNode} from "hdnode-js"
 import Cosmos from "./cosmos"
@@ -11,10 +12,9 @@ import Darkpool from "./darkpool"
 import {DIDDoc, DidDP, DidSecret, KeyGenerator} from "../types";
 import DarkpoolApp from "../index";
 
-const entropySalt = 'xioaio2nxxoiisjfiji93902..3232'
+const entropySalt = 'xi.oaio.2nxx.oiisjf.iji93902..3232'
 
 export class GeneratorBuilder {
-
 
     static generateMnemonic() {
         let mnemonic = bip39.generateMnemonic()
@@ -188,12 +188,6 @@ export class GeneratorBuilder {
 
     }
 
-    build(): DidDP {
-        if (this.memory.mem == "") {
-
-        }
-        return null
-    }
 
     withName(nameHash: string): GeneratorBuilder {
         this.memory.name = nameHash
@@ -221,8 +215,16 @@ export class GeneratorBuilder {
     }
 
     recover(m: string): DidDP {
+        return this.withMem(m).build()
+    }
 
-        const {publicKeyBytes, privateKeyBytes} = GeneratorBuilder.derivePrivateKeys(this.memory.mem)
+    build(): DidDP {
+        //  {derivePath, getMasterKeyFromSeed, getPublicKey}
+        //  const {publicKeyBytes, privateKeyBytes}
+        const keyPair = nacl.sign.keyPair.fromSeed(this.memory.seed)
+        const signPk = keyPair.secretKey.subarray(32);
+        //const pubkey = keyPair.publickey
+        const __key = Buffer.from(signPk);
         const {keyPairPublicKey, keyPairPrivateKey} = GeneratorBuilder.derivePrivateKeys(privateKeyBytes)
 
         let secret_doc: DidSecret = {
